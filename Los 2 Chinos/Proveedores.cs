@@ -87,7 +87,7 @@ namespace Los_2_Chinos
                 // Después de agregar el proveedor, recargamos los datos en el DataGridView.
                 CrargarDTG();
             }
-            else MessageBox.Show("El Proveedor no fue agregado");
+            else MessageBox.Show("El Proveedor no fue agregadooooro");
         }
         #endregion
         #region BTN MODIFICAR
