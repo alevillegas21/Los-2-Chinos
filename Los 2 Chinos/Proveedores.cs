@@ -117,6 +117,8 @@ namespace Los_2_Chinos
                 CrargarDTG();
             }
             else MessageBox.Show("El Proveedor no fue agregado");
+
+            conn.Close();
         }
         #endregion
 

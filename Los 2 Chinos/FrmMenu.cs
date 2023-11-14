@@ -12,9 +12,10 @@ namespace Los_2_Chinos
 {
     public partial class FrmMenu : Form
     {
-        public FrmMenu()
+        public FrmMenu(string Nombre)
         {
             InitializeComponent();
+            lblNombre.Text = Nombre;
         }
 
         private Form formularioActual = null;  // Variable para mantener referencia al formulario actual
@@ -57,6 +58,20 @@ namespace Los_2_Chinos
 
             // Llamar al método para abrir el formulario en el panel
             AbrirFormEnPanel(formProveedores);
+        }
+
+        private void btnMenu_Click(object sender, EventArgs e)
+        {
+            // Crear una instancia del formulario que deseas abrir
+            MenuPrincipal formmenu = new MenuPrincipal();
+
+            // Llamar al método para abrir el formulario en el panel
+            AbrirFormEnPanel(formmenu);
+        }
+
+        private void PanelMenu_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
