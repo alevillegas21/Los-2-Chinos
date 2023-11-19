@@ -42,6 +42,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtTotal = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.BtnFinalizarVenta = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dtgArticulosMenu)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtgCarrito)).BeginInit();
             this.SuspendLayout();
@@ -176,12 +177,23 @@
             this.label3.TabIndex = 5;
             this.label3.Text = "Codigo Barra:";
             // 
+            // BtnFinalizarVenta
+            // 
+            this.BtnFinalizarVenta.Location = new System.Drawing.Point(215, 585);
+            this.BtnFinalizarVenta.Name = "BtnFinalizarVenta";
+            this.BtnFinalizarVenta.Size = new System.Drawing.Size(200, 25);
+            this.BtnFinalizarVenta.TabIndex = 6;
+            this.BtnFinalizarVenta.Text = "Finalizar Venta";
+            this.BtnFinalizarVenta.UseVisualStyleBackColor = true;
+            this.BtnFinalizarVenta.Click += new System.EventHandler(this.button1_Click);
+            // 
             // MenuPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(131)))), ((int)(((byte)(209)))));
             this.ClientSize = new System.Drawing.Size(1503, 817);
+            this.Controls.Add(this.BtnFinalizarVenta);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
@@ -217,5 +229,6 @@
         private System.Windows.Forms.TextBox txtTotal;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.DataGridViewImageColumn Eliminar;
+        private System.Windows.Forms.Button BtnFinalizarVenta;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AForge.Video;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -72,6 +73,16 @@ namespace Los_2_Chinos
         private void PanelMenu_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void Btn_Camaras(object sender, EventArgs e)
+        {
+             Camaras camaras = new Camaras();
+
+            camaras.TopLevel = false;
+            camaras.FormBorderStyle = FormBorderStyle.None;
+            camaras.Dock = DockStyle.Fill;
+            AbrirFormEnPanel(camaras);
         }
     }
 }

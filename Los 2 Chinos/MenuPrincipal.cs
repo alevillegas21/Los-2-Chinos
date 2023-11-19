@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,11 @@ namespace Los_2_Chinos
             comando.Fill(tabla);
             dtgArticulosMenu.DataSource = tabla;
         }
+        private const string rutaArchivoVentas = "ventas.csv";
+
+        // Resto de tu código...
+
+        
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
@@ -91,8 +97,8 @@ namespace Los_2_Chinos
             {
                 txtCodigoDeBarra.Text = dtgArticulosMenu.SelectedCells[0].Value.ToString();
             }
-            catch(Exception) { }
-            
+            catch (Exception) { }
+
         }
         private void dtgCarrito_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -114,10 +120,41 @@ namespace Los_2_Chinos
 
                     CalcularTotalCarrito(); // Recalcular el total después de ajustar la cantidad
                 }
-            }catch(Exception) { }
-            
+            }
+            catch (Exception) { }
+
         }
-        private void CalcularTotalCarrito()
+        private void RegistrarVenta(decimal monto)
+        {
+            conn.Open();
+            string consulta = "INSERT INTO Venta (monto, fecha) VALUES (@monto, @fecha); SELECT SCOPE_IDENTITY();";
+            SqlCommand comandoVenta = new SqlCommand(consulta, conn);
+            comandoVenta.Parameters.AddWithValue("@monto", monto);
+            comandoVenta.Parameters.AddWithValue("@fecha", DateTime.Now);
+
+            // Obtener el ID de la venta recién insertada
+            int ventaID = Convert.ToInt32(comandoVenta.ExecuteScalar());
+
+            // Iterar sobre los artículos en el carrito y registrarlos en la tabla VentaArticulo
+            foreach (DataGridViewRow row in dtgCarrito.Rows)
+            {
+                string codigoDeBarra = row.Cells["codigo_de_barra"].Value.ToString();
+                decimal precioVenta = Convert.ToDecimal(row.Cells["precio_venta"].Value);
+                int cantidad = Convert.ToInt32(row.Cells["cantidad"].Value);
+
+                string consultaDetalle = "INSERT INTO VentaArticulo (idventa, codigo_de_barra, precio_venta, cantidad) VALUES (@idventa, @codigo_de_barra, @precio_venta, @cantidad)";
+                SqlCommand comandoDetalle = new SqlCommand(consultaDetalle, conn);
+                comandoDetalle.Parameters.AddWithValue("@idventa", ventaID);
+                comandoDetalle.Parameters.AddWithValue("@codigo_de_barra", codigoDeBarra);
+                comandoDetalle.Parameters.AddWithValue("@precio_venta", precioVenta);
+                comandoDetalle.Parameters.AddWithValue("@cantidad", cantidad);
+
+                comandoDetalle.ExecuteNonQuery();
+            }
+
+            conn.Close();
+        }
+        private decimal CalcularTotalCarrito()
         {
             decimal totalCarrito = 0;
 
@@ -136,6 +173,45 @@ namespace Los_2_Chinos
 
             // Mostrar el total en algún lugar, por ejemplo, en un TextBox
             txtTotal.Text = totalCarrito.ToString("C"); // Esto formatea el total como moneda
+
+            return totalCarrito; // Devolver el total calculado
+        }
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Mostrar un cuadro de diálogo de confirmación
+                DialogResult result = MessageBox.Show("¿Estás seguro de agregar la venta?", "Confirmar Agregado", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                // Verificar la respuesta del usuario
+                if (result == DialogResult.Yes)
+                {
+                    // Resto del código para agregar la venta
+
+                    // Calcular el monto total de la venta
+                    decimal totalCarrito = CalcularTotalCarrito();
+
+                    // Asignar el monto total al TextBox txtTotal
+                    txtTotal.Text = totalCarrito.ToString("C"); // Esto formatea el total como moneda
+
+                    // Registrar la venta en el archivo
+                    RegistrarVenta(totalCarrito);
+
+                    // Limpiar el carrito después de registrar la venta
+                    dtgCarrito.Rows.Clear();
+                }
+                else
+                {
+                    MessageBox.Show("La venta no fue registrada", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al agregar la venta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
         }
     }
 }
+
+    
