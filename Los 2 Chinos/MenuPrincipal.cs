@@ -35,7 +35,7 @@ namespace Los_2_Chinos
 
         // Resto de tu código...
 
-        
+
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
@@ -124,33 +124,19 @@ namespace Los_2_Chinos
             catch (Exception) { }
 
         }
-        private void RegistrarVenta(decimal monto)
+        private void RegistrarVenta()
         {
             conn.Open();
-            string consulta = "INSERT INTO Venta (monto, fecha) VALUES (@monto, @fecha); SELECT SCOPE_IDENTITY();";
+
+            string consulta = "INSERT INTO Venta (monto, fecha) VALUES (@monto, @fecha)";
             SqlCommand comandoVenta = new SqlCommand(consulta, conn);
-            comandoVenta.Parameters.AddWithValue("@monto", monto);
+            // Eliminar el símbolo de dólar y convertir el valor a decimal
+            
+            comandoVenta.Parameters.AddWithValue("@monto", txtTotal.Text); // Asegúrate de convertir el texto a decimal
             comandoVenta.Parameters.AddWithValue("@fecha", DateTime.Now);
 
-            // Obtener el ID de la venta recién insertada
-            int ventaID = Convert.ToInt32(comandoVenta.ExecuteScalar());
-
-            // Iterar sobre los artículos en el carrito y registrarlos en la tabla VentaArticulo
-            foreach (DataGridViewRow row in dtgCarrito.Rows)
-            {
-                string codigoDeBarra = row.Cells["codigo_de_barra"].Value.ToString();
-                decimal precioVenta = Convert.ToDecimal(row.Cells["precio_venta"].Value);
-                int cantidad = Convert.ToInt32(row.Cells["cantidad"].Value);
-
-                string consultaDetalle = "INSERT INTO VentaArticulo (idventa, codigo_de_barra, precio_venta, cantidad) VALUES (@idventa, @codigo_de_barra, @precio_venta, @cantidad)";
-                SqlCommand comandoDetalle = new SqlCommand(consultaDetalle, conn);
-                comandoDetalle.Parameters.AddWithValue("@idventa", ventaID);
-                comandoDetalle.Parameters.AddWithValue("@codigo_de_barra", codigoDeBarra);
-                comandoDetalle.Parameters.AddWithValue("@precio_venta", precioVenta);
-                comandoDetalle.Parameters.AddWithValue("@cantidad", cantidad);
-
-                comandoDetalle.ExecuteNonQuery();
-            }
+            // Ejecutar la consulta de inserción
+            comandoVenta.ExecuteNonQuery();
 
             conn.Close();
         }
@@ -172,7 +158,7 @@ namespace Los_2_Chinos
             }
 
             // Mostrar el total en algún lugar, por ejemplo, en un TextBox
-            txtTotal.Text = totalCarrito.ToString("C"); // Esto formatea el total como moneda
+            txtTotal.Text = totalCarrito.ToString(); // Esto formatea el total como moneda
 
             return totalCarrito; // Devolver el total calculado
         }
@@ -186,19 +172,20 @@ namespace Los_2_Chinos
                 // Verificar la respuesta del usuario
                 if (result == DialogResult.Yes)
                 {
-                    // Resto del código para agregar la venta
-
                     // Calcular el monto total de la venta
-                    decimal totalCarrito = CalcularTotalCarrito();
+                    decimal totalCarrito;
+                    if (Decimal.TryParse(txtTotal.Text, out totalCarrito))
+                    {
+                        // Registrar la venta en el archivo
+                        RegistrarVenta();
 
-                    // Asignar el monto total al TextBox txtTotal
-                    txtTotal.Text = totalCarrito.ToString("C"); // Esto formatea el total como moneda
-
-                    // Registrar la venta en el archivo
-                    RegistrarVenta(totalCarrito);
-
-                    // Limpiar el carrito después de registrar la venta
-                    dtgCarrito.Rows.Clear();
+                        // Limpiar el carrito después de registrar la venta
+                        dtgCarrito.Rows.Clear();
+                    }
+                    else
+                    {
+                        MessageBox.Show("El monto total no es válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
@@ -209,8 +196,8 @@ namespace Los_2_Chinos
             {
                 MessageBox.Show($"Error al agregar la venta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
+
     }
 }
 

@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AForge.Video;
 using AForge.Video.DirectShow;
@@ -15,13 +8,14 @@ namespace Los_2_Chinos
 {
     public partial class Camaras : Form
     {
+        private FilterInfoCollection videoDevices;
+        private VideoCaptureDevice[] videoSource;
+
         public Camaras()
         {
             InitializeComponent();
             InitializeCamera();
         }
-        private FilterInfoCollection videoDevices;
-        private VideoCaptureDevice[] videoSource;
 
         private void InitializeCamera()
         {
@@ -32,7 +26,6 @@ namespace Los_2_Chinos
             {
                 videoSource[i] = new VideoCaptureDevice(videoDevices[i].MonikerString);
                 videoSource[i].NewFrame += new NewFrameEventHandler(video_NewFrame);
-                
             }
 
             // Llena el ComboBox con las cámaras encontradas
@@ -44,16 +37,6 @@ namespace Los_2_Chinos
             if (comboBox5.Items.Count > 0)
             {
                 comboBox5.SelectedIndex = 0;
-            }
-            
-        }
-        private void FormCamaras_Load(object sender, EventArgs e)
-        {
-            videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-
-            foreach (FilterInfo device in videoDevices)
-            {
-                comboBox1.Items.Add(device.Name);
             }
         }
 
@@ -76,41 +59,52 @@ namespace Los_2_Chinos
                 videoSource[selectedCameraIndex].Start();
             }
         }
-        private void videoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
+
+        private void video_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
-            pictureBox1.Image = (System.Drawing.Image)eventArgs.Frame.Clone();
+            // Actualiza el PictureBox correspondiente con el fotograma actual
+            if (pictureBox1.Image != null)
+            {
+                pictureBox1.Image.Dispose(); // Libera la imagen anterior
+            }
+
+            if (pictureBox2.Image != null)
+            {
+                pictureBox2.Image.Dispose(); // Libera la imagen anterior
+            }
+
+            if (pictureBox3.Image != null)
+            {
+                pictureBox3.Image.Dispose(); // Libera la imagen anterior
+            }
+
+            if (pictureBox4.Image != null)
+            {
+                pictureBox4.Image.Dispose(); // Libera la imagen anterior
+            }
+
+            // Clona el fotograma para mostrar en los cuatro PictureBox
+            Bitmap clonedFrame = (Bitmap)eventArgs.Frame.Clone();
+
+            pictureBox1.Image = clonedFrame;
+            pictureBox2.Image = (Bitmap)clonedFrame.Clone();
+            pictureBox3.Image = (Bitmap)clonedFrame.Clone();
+            pictureBox4.Image = (Bitmap)clonedFrame.Clone();
+
+            // Aquí puedes realizar otras acciones con el fotograma, si es necesario
+            // Por ejemplo, procesar la imagen o enviarla a otra ubicación
         }
 
         private void FormCamaras_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Detiene todas las cámaras cuando se cierra el formulario
-            //foreach (var source in videoSource)
-            //{
-              //  if (source.IsRunning)
-                //{
-                 //   source.SignalToStop();
-                 //  source.WaitForStop();
-              //  }
-            //}
-        }
-        private void video_NewFrame(object sender, NewFrameEventArgs eventArgs)
-        {
-            // Actualiza el PictureBox correspondiente con el fotograma actual
-            if (pictureBox1.Image == null)
+            foreach (var source in videoSource)
             {
-                pictureBox1.Image = (System.Drawing.Image)eventArgs.Frame.Clone();
-            }
-            if (pictureBox2.Image == null)
-            {
-                pictureBox2.Image = (System.Drawing.Image)eventArgs.Frame.Clone();
-            }
-            if (pictureBox3.Image == null)
-            {
-                pictureBox3.Image = (System.Drawing.Image)eventArgs.Frame.Clone();
-            }
-            if (pictureBox4.Image == null)
-            {
-                pictureBox4.Image = (System.Drawing.Image)eventArgs.Frame.Clone();
+                if (source.IsRunning)
+                {
+                    source.SignalToStop();
+                    source.WaitForStop();
+                }
             }
         }
     }
