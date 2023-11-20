@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using AForge.Video;
 using AForge.Video.DirectShow;
@@ -98,12 +99,15 @@ namespace Los_2_Chinos
         private void FormCamaras_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Detiene todas las cámaras cuando se cierra el formulario
-            foreach (var source in videoSource)
+            if (videoSource != null)
             {
-                if (source.IsRunning)
+                foreach (var source in videoSource.Where(s => s != null))
                 {
-                    source.SignalToStop();
-                    source.WaitForStop();
+                    if (source.IsRunning)
+                    {
+                        source.SignalToStop();
+                        source.WaitForStop();
+                    }
                 }
             }
         }

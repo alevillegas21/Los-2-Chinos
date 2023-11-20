@@ -9,7 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
+
 
 namespace Los_2_Chinos
 {
@@ -131,7 +135,7 @@ namespace Los_2_Chinos
             string consulta = "INSERT INTO Venta (monto, fecha) VALUES (@monto, @fecha)";
             SqlCommand comandoVenta = new SqlCommand(consulta, conn);
             // Eliminar el símbolo de dólar y convertir el valor a decimal
-            
+
             comandoVenta.Parameters.AddWithValue("@monto", txtTotal.Text); // Asegúrate de convertir el texto a decimal
             comandoVenta.Parameters.AddWithValue("@fecha", DateTime.Now);
 
@@ -166,39 +170,86 @@ namespace Los_2_Chinos
         {
             try
             {
-                // Mostrar un cuadro de diálogo de confirmación
-                DialogResult result = MessageBox.Show("¿Estás seguro de agregar la venta?", "Confirmar Agregado", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                // Resto del código para agregar la venta y obtener la información necesaria
 
-                // Verificar la respuesta del usuario
-                if (result == DialogResult.Yes)
-                {
-                    // Calcular el monto total de la venta
-                    decimal totalCarrito;
-                    if (Decimal.TryParse(txtTotal.Text, out totalCarrito))
-                    {
-                        // Registrar la venta en el archivo
-                        RegistrarVenta();
+                // Calcular el monto total de la venta
+                decimal totalCarrito = CalcularTotalCarrito();
 
-                        // Limpiar el carrito después de registrar la venta
-                        dtgCarrito.Rows.Clear();
-                    }
-                    else
-                    {
-                        MessageBox.Show("El monto total no es válido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("La venta no fue registrada", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                // Registrar la venta en la base de datos
+                RegistrarVenta();
+
+                // Generar el PDF con la información de la venta
+                GenerarTicketPDF(totalCarrito);
+
+                // Limpiar el carrito después de registrar la venta
+                dtgCarrito.Rows.Clear();
+                txtTotal.Text = "0.00";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al agregar la venta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al procesar la venta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        private void GenerarTicketPDF(decimal totalVenta)
+        {
+            // Obtener la ruta del escritorio
+            string escritorio = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+            // Crear un documento PDF
+            PdfDocument document = new PdfDocument();
+
+            // Añadir una página al documento
+            PdfPage page = document.AddPage();
+
+            // Obtener un objeto XGraphics para dibujar en la página
+            XGraphics gfx = XGraphics.FromPdfPage(page);
+
+            // Configurar la fuente y tamaño
+            XFont fontTitulo = new XFont("Arial", 16, XFontStyle.Bold);
+            XFont fontNormal = new XFont("Arial", 12, XFontStyle.Regular);
+
+            // Dibujar en la página
+            gfx.DrawString("Los Dos Chinos Supermercado", fontTitulo, XBrushes.Black, new XRect(10, 10, page.Width, page.Height), XStringFormats.TopLeft);
+            gfx.DrawString("Avenida Siempre Viva 156", fontNormal, XBrushes.Black, new XRect(10, 30, page.Width, page.Height), XStringFormats.TopLeft);
+            gfx.DrawString($"Fecha: {DateTime.Now}", fontNormal, XBrushes.Black, new XRect(10, 50, page.Width, page.Height), XStringFormats.TopLeft);
+
+            // Agregar detalles de los productos y cantidades
+            gfx.DrawString("Detalle del Ticket", fontTitulo, XBrushes.Black, new XRect(10, 70, page.Width, page.Height), XStringFormats.TopLeft);
+
+            int yPos = 90; // Posición vertical inicial para los productos
+            foreach (DataGridViewRow row in dtgCarrito.Rows)
+            {
+                if (row.Cells["Detalle"].Value != null && row.Cells["Cantidad"].Value != null && row.Cells["PrecioVenta"].Value != null)
+                {
+                    string detalleProducto = row.Cells["Detalle"].Value.ToString();
+                    int cantidadProducto = Convert.ToInt32(row.Cells["Cantidad"].Value);
+                    decimal precioProducto = Convert.ToDecimal(row.Cells["PrecioVenta"].Value);
+
+                    string lineaProducto = $"{detalleProducto} - Cantidad: {cantidadProducto} - Precio Unitario: {precioProducto:C}";
+                    gfx.DrawString(lineaProducto, fontNormal, XBrushes.Black, new XRect(10, yPos, page.Width, page.Height), XStringFormats.TopLeft);
+
+                    yPos += 20; // Incrementar la posición vertical para el próximo producto
+                }
+            }
+
+            // Agregar el total
+            gfx.DrawString($"Monto Total: {totalVenta:C}", fontNormal, XBrushes.Black, new XRect(10, yPos, page.Width, page.Height), XStringFormats.TopLeft);
+
+            // Obtener un nombre único para el archivo PDF
+            string nombreArchivo = $"ticket_venta_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+            // Guardar el documento en un archivo en la carpeta del escritorio
+            string rutaPDF = Path.Combine(escritorio, "VentasPDF", nombreArchivo);
+            document.Save(rutaPDF);
+
+            MessageBox.Show("Ticket generado con éxito.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
 
     }
+
 }
+
+
 
     
